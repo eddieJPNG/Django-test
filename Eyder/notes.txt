@@ -1,0 +1,8 @@
+sintaxe 
+
+def nome (argumento...arg...arg):
+      comando
+      ...
+      comando
+
+*Return* - 
