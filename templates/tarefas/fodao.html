@@ -1,0 +1,748 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Página Interativa — HTML + CSS + JS Embutidos</title>
+  <meta name="description" content="Exemplo moderno de página single-file com CSS e JS embutidos: tema claro/escuro, cards interativos, modal de contato e animações." />
+  <style>
+    /* ========= CSS RESET ========= */
+    :root{
+      --bg: 245 245 247; /* light bg (rgb components for easy alpha) */
+      --card: 255 255 255;
+      --text: 17 24 39;
+      --muted: 99 102 120;
+      --accent: 99 102 241; /* indigo-500 */
+      --glass: 255 255 255;
+      --shadow: 0 10px 30px rgba(2,6,23,0.08);
+    }
+
+    [data-theme="dark"]{
+      --bg: 10 12 20;
+      --card: 16 18 28;
+      --text: 226 232 240;
+      --muted: 148 163 184;
+      --accent: 99 102 241;
+      --glass: 24 26 36;
+      --shadow: 0 8px 28px rgba(2,6,23,0.6);
+    }
+
+    *, *::before, *::after{box-sizing:border-box}
+    html,body,#app{height:100%}
+    body{
+      margin:0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(180deg, rgba(var(--bg),1) 0%, rgba(var(--bg),1) 100%);
+      color: rgb(var(--text));
+      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+      line-height:1.45;
+      padding:32px;
+      transition:background .3s ease, color .25s ease;
+    }
+
+    /* ========== LAYOUT ========== */
+    .container{max-width:1100px;margin:0 auto}
+    header{
+      display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:28px;
+    }
+    .brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit}
+    .logo{width:44px;height:44px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(135deg, rgba(var(--accent),1), rgba(59,130,246,0.8));color:white;font-weight:700;box-shadow:var(--shadow)}
+
+    nav ul{display:flex;gap:12px;align-items:center;margin:0;padding:0;list-style:none}
+    nav a{color:rgb(var(--muted));text-decoration:none;padding:8px 12px;border-radius:8px;font-size:14px}
+    nav a:hover{color:rgb(var(--text));background:rgba(var(--accent),0.06)}
+
+    .theme-toggle{background:transparent;border:1px solid rgba(var(--muted),0.12);padding:8px;border-radius:10px;cursor:pointer}
+
+    /* ========== HERO ========== */
+    .hero{display:grid;grid-template-columns:1fr 380px;gap:28px;align-items:center;margin-bottom:28px}
+    .hero-card{background:rgba(var(--card),1);padding:28px;border-radius:14px;box-shadow:var(--shadow);backdrop-filter: blur(6px);}
+    h1{font-size:28px;margin:0 0 8px}
+    p.lead{margin:0 0 18px;color:rgb(var(--muted));font-size:15px}
+    .cta-row{display:flex;gap:12px}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;border:0;cursor:pointer;font-weight:600}
+    .btn-primary{background:linear-gradient(90deg, rgba(var(--accent),1), rgba(59,130,246,0.9));color:white}
+    .btn-ghost{background:transparent;border:1px solid rgba(var(--muted),0.14);color:rgb(var(--text))}
+
+    /* ========== FEATURES GRID ========== */
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px}
+    .feature{background:linear-gradient(180deg, rgba(var(--glass),0.9), rgba(var(--glass),0.94));padding:18px;border-radius:12px;box-shadow:0 6px 20px rgba(2,6,23,0.06);transition:transform .25s ease,box-shadow .25s ease}
+    .feature:hover{transform:translateY(-6px);box-shadow:var(--shadow)}
+    .feature h3{margin:0 0 6px;font-size:16px}
+    .feature p{margin:0;color:rgb(var(--muted));font-size:13px}
+
+    /* ========== INTERACTIVE CARD ========== */
+    .interactive{perspective:1200px}
+    .card-3d{width:100%;height:220px;border-radius:12px;background:linear-gradient(135deg, rgba(var(--accent),0.12), rgba(var(--glass),0.96));display:flex;flex-direction:column;justify-content:space-between;padding:18px;transform-style:preserve-3d;transition:transform .2s ease,box-shadow .2s ease}
+    .card-3d .meta{display:flex;justify-content:space-between;align-items:center}
+    .avatar{width:52px;height:52px;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#06b6d4);display:grid;place-items:center;color:white;font-weight:700}
+    .meter{height:8px;background:rgba(var(--muted),0.08);border-radius:6px;overflow:hidden}
+    .meter > i{display:block;height:100%;width:60%;background:linear-gradient(90deg,rgba(var(--accent),1),rgba(59,130,246,0.9))}
+
+    /* ========== GALLERY ========== */
+    .gallery{display:flex;gap:8px}
+    .thumb{flex:1 1 0;height:100px;border-radius:10px;background-size:cover;background-position:center;cursor:pointer;box-shadow:0 8px 20px rgba(2,6,23,0.06)}
+
+    /* ========== FOOTER / MODAL ========== */
+    footer{margin-top:32px;color:rgb(var(--muted));font-size:13px}
+
+    /* Modal */
+    .modal-backdrop{position:fixed;inset:0;display:grid;place-items:center;background:rgba(2,6,23,0.4);opacity:0;pointer-events:none;transition:opacity .18s ease}
+    .modal{width:100%;max-width:580px;background:rgba(var(--card),1);padding:20px;border-radius:12px;box-shadow:var(--shadow);transform:translateY(12px);transition:transform .18s ease}
+    .modal.open{transform:translateY(0)}
+    .modal-backdrop.open{opacity:1;pointer-events:auto}
+
+    /* Forms */
+    .field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+    input,textarea{padding:10px;border-radius:8px;border:1px solid rgba(var(--muted),0.12);background:transparent;color:inherit;font-size:14px}
+    textarea{min-height:110px;resize:vertical}
+
+    /* Responsiveness */
+    @media (max-width:980px){
+      .hero{grid-template-columns:1fr}
+      .grid{grid-template-columns:repeat(2,1fr)}
+    }
+    @media (max-width:620px){
+      body{padding:18px}
+      .grid{grid-template-columns:1fr}
+      nav ul{display:none}
+    }
+
+    /* Small helpers */
+    .muted{color:rgb(var(--muted));font-size:13px}
+    .small{font-size:13px}
+
+  </style>
+</head>
+<body>
+  <div class="container" id="app">
+    <header>
+      <a class="brand" href="#" aria-label="Página Interativa">
+        <div class="logo">UI</div>
+        <div>
+          <strong>Página Interativa</strong>
+          <div class="small muted">HTML • CSS • JS embutidos</div>
+        </div>
+      </a>
+
+      <div style="display:flex;align-items:center;gap:12px">
+        <nav aria-label="Navegação principal">
+          <ul>
+            <li><a href="#features">Recursos</a></li>
+            <li><a href="#demo">Demo</a></li>
+            <li><a href="#contact" id="openContact">Contato</a></li>
+          </ul>
+        </nav>
+
+        <button class="theme-toggle" id="themeToggle" title="Alternar tema">🌙</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-card" role="region" aria-labelledby="hero-title">
+          <h1 id="hero-title">Uma página exemplo, elegante e interativa</h1>
+          <p class="lead">Layout moderno responsivo com componentes práticos: cartão 3D, galeria, modal de contato e alternância de tema. Use como base para seus projetos.</p>
+
+          <div class="cta-row">
+            <button class="btn btn-primary" id="demoBtn">Ver demo</button>
+            <button class="btn btn-ghost" id="downloadBtn">Salvar HTML</button>
+          </div>
+
+          <div style="margin-top:16px">
+            <div class="muted">Acessos</div>
+            <div style="display:flex;gap:10px;margin-top:8px;align-items:center">
+              <div class="meter" style="flex:1"><i></i></div>
+              <div class="small muted">7.2k visitas</div>
+            </div>
+          </div>
+        </div>
+
+        <aside>
+          <div class="interactive" aria-hidden="false">
+            <div class="card-3d" id="card3d" tabindex="0">
+              <div class="meta">
+                <div>
+                  <div class="avatar">JS</div>
+                </div>
+                <div class="muted small">Interação 3D</div>
+              </div>
+
+              <div>
+                <h3 style="margin:0 0 6px">Cartão Interativo</h3>
+                <p class="small muted">Mova o mouse sobre o cartão para ver o efeito 3D. Pressione espaço para animar.</p>
+              </div>
+
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div class="small muted">Progresso</div>
+                <div style="width:120px" class="meter"><i style="width:72%"></i></div>
+              </div>
+            </div>
+
+            <div style="margin-top:12px" class="gallery" aria-hidden="true">
+              <div class="thumb" style="background-image:url('https://images.unsplash.com/photo-1503023345310-bd7c1de61c7d?auto=format&fit=crop&w=800&q=60');" data-large="https://images.unsplash.com/photo-1503023345310-bd7c1de61c7d?auto=format&fit=crop&w=1200&q=80" role="button" aria-label="Abrir imagem 1"></div>
+              <div class="thumb" style="background-image:url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=60');" data-large="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80" role="button" aria-label="Abrir imagem 2"></div>
+              <div class="thumb" style="background-image:url('https://images.unsplash.com/photo-1492724441997-5dc865305da7?auto=format&fit=crop&w=800&q=60');" data-large="https://images.unsplash.com/photo-1492724441997-5dc865305da7?auto=format&fit=crop&w=1200&q=80" role="button" aria-label="Abrir imagem 3"></div>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <section id="features" class="grid">
+        <div class="feature" tabindex="0">
+          <h3>Design Responsivo</h3>
+          <p>Componentes que se adaptam a telas pequenas ou grandes sem esforço.</p>
+        </div>
+        <div class="feature" tabindex="0">
+          <h3>Acessibilidade</h3>
+          <p>Foco visível, roles e atributos ARIA básicos para navegação com teclado.</p>
+        </div>
+        <div class="feature" tabindex="0">
+          <h3>Performance</h3>
+          <p>Somente recursos essenciais no arquivo — ideal para protótipos leves.</p>
+        </div>
+        <div class="feature" tabindex="0">
+          <h3>Interatividade</h3>
+          <p>Efeitos 3D, lightbox simples e validação de formulário via JavaScript.</p>
+        </div>
+        <div class="feature" tabindex="0">
+          <h3>Temas</h3>
+          <p>Suporte a tema claro e escuro com persistência em localStorage.</p>
+        </div>
+        <div class="feature" tabindex="0">
+          <h3>Pronto para clonar</h3>
+          <p>Copie o arquivo, modifique e publique. Comentários inline ajudam a orientar alterações.</p>
+        </div>
+      </section>
+
+      <section id="demo" class="hero-card" style="margin-bottom:24px">
+        <h2 style="margin-top:0">Demo: Formulário com Validação</h2>
+        <form id="contactForm" novalidate>
+          <div class="field">
+            <label for="name">Nome</label>
+            <input id="name" name="name" required placeholder="Seu nome" />
+          </div>
+          <div class="field">
+            <label for="email">E‑mail</label>
+            <input id="email" name="email" type="email" required placeholder="seu@exemplo.com" />
+          </div>
+          <div class="field">
+            <label for="message">Mensagem</label>
+            <textarea id="message" name="message" placeholder="Como posso ajudar?" required></textarea>
+          </div>
+
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="btn btn-primary" type="submit">Enviar</button>
+            <div id="formStatus" class="muted small">Nenhuma ação ainda.</div>
+          </div>
+        </form>
+      </section>
+
+    </main>
+
+    <footer>
+      <div>Feito com ❤️ — código único em um arquivo. &middot; <strong>Use como ponto de partida.</strong></div>
+    </footer>
+
+  </div>
+
+  <!-- Modal markup (fora do fluxo) -->
+  <div id="modalBackdrop" class="modal-backdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <h3 id="modalTitle">Fale conosco</h3>
+      <p class="muted small">Envie uma mensagem rápida — este modal demonstra manipulação simples de DOM.</p>
+      <form id="modalForm">
+        <div class="field"><label for="mname">Nome</label><input id="mname" required></div>
+        <div class="field"><label for="mmsg">Mensagem</label><textarea id="mmsg" required></textarea></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button type="button" class="btn btn-ghost" id="closeModal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Enviar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // ====== Utilitários ======
+    const $ = (sel, ctx = document) => ctx.querySelector(sel);
+    const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
+
+    // ====== Tema (persistência) ======
+    const themeToggle = $('#themeToggle');
+    const root = document.documentElement;
+    const saved = localStorage.getItem('ui-theme');
+    if (saved) document.documentElement.setAttribute('data-theme', saved);
+    const isDark = () => document.documentElement.getAttribute('data-theme') === 'dark';
+    const updateToggle = () => themeToggle.textContent = isDark() ? '☀️' : '🌙';
+    updateToggle();
+    themeToggle.addEventListener('click', () => {
+      const next = isDark() ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('ui-theme', next);
+      updateToggle();
+    });
+
+    // ====== Cartão 3D (efeito parallax) ======
+    const card = $('#card3d');
+    let bounds = null;
+    function updateBounds(){ bounds = card.getBoundingClientRect(); }
+    updateBounds();
+    window.addEventListener('resize', updateBounds);
+
+    function handleMove(e){
+      const {clientX, clientY} = e.type.startsWith('touch') ? e.touches[0] : e;
+      const px = (clientX - (bounds.left + bounds.width/2)) / (bounds.width/2);
+      const py = (clientY - (bounds.top + bounds.height/2)) / (bounds.height/2);
+      const rx = -py * 8; // rotation X
+      const ry = px * 12; // rotation Y
+      card.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg) scale(1.02)`;
+      card.style.boxShadow = '0 20px 40px rgba(2,6,23,0.12)';
+    }
+    function resetCard(){ card.style.transform = 'rotateX(0deg) rotateY(0deg) scale(1)'; card.style.boxShadow = '' }
+
+    card.addEventListener('mousemove', handleMove);
+    card.addEventListener('touchmove', handleMove);
+    card.addEventListener('mouseleave', resetCard);
+    card.addEventListener('touchend', resetCard);
+    card.addEventListener('keydown', (ev) => { if(ev.code === 'Space'){ ev.preventDefault(); card.animate([{transform:'scale(1)'},{transform:'scale(1.03)'},{transform:'scale(1)'}],{duration:420}) } });
+
+    // ====== Lightbox simples para galeria ======
+    const backdrop = document.createElement('div');
+    backdrop.style.position = 'fixed'; backdrop.style.inset = 0; backdrop.style.display='grid'; backdrop.style.placeItems='center'; backdrop.style.background='rgba(2,6,23,0.6)'; backdrop.style.opacity=0; backdrop.style.transition='opacity .18s ease'; backdrop.style.pointerEvents='none';
+    const img = document.createElement('img'); img.style.maxWidth='92%'; img.style.maxHeight='88%'; img.style.borderRadius='10px'; img.style.boxShadow='0 12px 40px rgba(2,6,23,0.6)';
+    backdrop.appendChild(img); document.body.appendChild(backdrop);
+
+    $$('.thumb').forEach(t => t.addEventListener('click', ()=>{
+      img.src = t.dataset.large || t.style.backgroundImage.slice(5,-2);
+      backdrop.style.opacity = 1; backdrop.style.pointerEvents = 'auto';
+    }));
+    backdrop.addEventListener('click', ()=>{ backdrop.style.opacity=0; backdrop.style.pointerEvents='none'; setTimeout(()=>img.src='','200') });
+
+    // ====== Modal (Contato) ======
+    const modalBackdrop = $('#modalBackdrop');
+    const openContact = $('#openContact');
+    const closeModal = $('#closeModal');
+
+    openContact.addEventListener('click', (e)=>{ e.preventDefault(); modalBackdrop.classList.add('open'); modalBackdrop.setAttribute('aria-hidden','false'); $('#mname').focus(); document.body.style.overflow='hidden' });
+    closeModal.addEventListener('click', ()=>{ modalBackdrop.classList.remove('open'); modalBackdrop.setAttribute('aria-hidden','true'); document.body.style.overflow='auto' });
+    modalBackdrop.addEventListener('click', (e)=>{ if(e.target === modalBackdrop){ closeModal.click() } });
+    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeModal.click() });
+
+    $('#modalForm').addEventListener('submit', (ev)=>{
+      ev.preventDefault();
+      // Simulação de envio
+      const name = $('#mname').value.trim();
+      const msg = $('#mmsg').value.trim();
+      if(!name || !msg){ alert('Preencha os campos'); return }
+      alert(`Obrigado, ${name}! Mensagem enviada.`);
+      closeModal.click();
+    });
+
+    // ====== Formulário principal ======
+    const contactForm = $('#contactForm');
+    contactForm.addEventListener('submit', (ev)=>{
+      ev.preventDefault();
+      const name = $('#name').value.trim();
+      const email = $('#email').value.trim();
+      const message = $('#message').value.trim();
+      const status = $('#formStatus');
+      if(!name || !email || !message){ status.textContent='Preencha todos os campos.'; status.style.color='var(--muted)'; return }
+      // validação simples de email
+      const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if(!re.test(email)){ status.textContent='E-mail inválido.'; return }
+      status.textContent='Enviando...';
+      setTimeout(()=>{ status.textContent='Mensagem enviada com sucesso!'; }, 700);
+    });
+
+    // ====== Download do HTML (gera o conteúdo atual da página como arquivo) ======
+    $('#downloadBtn').addEventListener('click', ()=>{
+      const html = new XMLSerializer().serializeToString(document.doctype) + '\n' + document.documentElement.outerHTML;
+      const blob = new Blob([html], {type:'text/html'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'pagina_interativa.html'; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 1000);
+    });
+
+    // ====== Demo button: scroll to demo ======
+    $('#demoBtn').addEventListener('click', ()=>{ document.getElementById('demo').scrollIntoView({behavior:'smooth'}) });
+
+    // Small accessibility: focus styles
+    document.addEventListener('keyup', (e)=>{ if(e.key === 'Tab') document.body.classList.add('show-focus') });
+
+  </script>
+</body>
+</html>
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Página Interativa — HTML + CSS + JS Embutidos</title>
+  <meta name="description" content="Exemplo moderno de página single-file com CSS e JS embutidos: tema claro/escuro, cards interativos, modal de contato e animações." />
+  <style>
+    /* ========= CSS RESET ========= */
+    :root{
+      --bg: 245 245 247; /* light bg (rgb components for easy alpha) */
+      --card: 255 255 255;
+      --text: 17 24 39;
+      --muted: 99 102 120;
+      --accent: 99 102 241; /* indigo-500 */
+      --glass: 255 255 255;
+      --shadow: 0 10px 30px rgba(2,6,23,0.08);
+    }
+
+    [data-theme="dark"]{
+      --bg: 10 12 20;
+      --card: 16 18 28;
+      --text: 226 232 240;
+      --muted: 148 163 184;
+      --accent: 99 102 241;
+      --glass: 24 26 36;
+      --shadow: 0 8px 28px rgba(2,6,23,0.6);
+    }
+
+    *, *::before, *::after{box-sizing:border-box}
+    html,body,#app{height:100%}
+    body{
+      margin:0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: linear-gradient(180deg, rgba(var(--bg),1) 0%, rgba(var(--bg),1) 100%);
+      color: rgb(var(--text));
+      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+      line-height:1.45;
+      padding:32px;
+      transition:background .3s ease, color .25s ease;
+    }
+
+    /* ========== LAYOUT ========== */
+    .container{max-width:1100px;margin:0 auto}
+    header{
+      display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:28px;
+    }
+    .brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:inherit}
+    .logo{width:44px;height:44px;border-radius:10px;display:grid;place-items:center;background:linear-gradient(135deg, rgba(var(--accent),1), rgba(59,130,246,0.8));color:white;font-weight:700;box-shadow:var(--shadow)}
+
+    nav ul{display:flex;gap:12px;align-items:center;margin:0;padding:0;list-style:none}
+    nav a{color:rgb(var(--muted));text-decoration:none;padding:8px 12px;border-radius:8px;font-size:14px}
+    nav a:hover{color:rgb(var(--text));background:rgba(var(--accent),0.06)}
+
+    .theme-toggle{background:transparent;border:1px solid rgba(var(--muted),0.12);padding:8px;border-radius:10px;cursor:pointer}
+
+    /* ========== HERO ========== */
+    .hero{display:grid;grid-template-columns:1fr 380px;gap:28px;align-items:center;margin-bottom:28px}
+    .hero-card{background:rgba(var(--card),1);padding:28px;border-radius:14px;box-shadow:var(--shadow);backdrop-filter: blur(6px);}
+    h1{font-size:28px;margin:0 0 8px}
+    p.lead{margin:0 0 18px;color:rgb(var(--muted));font-size:15px}
+    .cta-row{display:flex;gap:12px}
+    .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;border:0;cursor:pointer;font-weight:600}
+    .btn-primary{background:linear-gradient(90deg, rgba(var(--accent),1), rgba(59,130,246,0.9));color:white}
+    .btn-ghost{background:transparent;border:1px solid rgba(var(--muted),0.14);color:rgb(var(--text))}
+
+    /* ========== FEATURES GRID ========== */
+    .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px}
+    .feature{background:linear-gradient(180deg, rgba(var(--glass),0.9), rgba(var(--glass),0.94));padding:18px;border-radius:12px;box-shadow:0 6px 20px rgba(2,6,23,0.06);transition:transform .25s ease,box-shadow .25s ease}
+    .feature:hover{transform:translateY(-6px);box-shadow:var(--shadow)}
+    .feature h3{margin:0 0 6px;font-size:16px}
+    .feature p{margin:0;color:rgb(var(--muted));font-size:13px}
+
+    /* ========== INTERACTIVE CARD ========== */
+    .interactive{perspective:1200px}
+    .card-3d{width:100%;height:220px;border-radius:12px;background:linear-gradient(135deg, rgba(var(--accent),0.12), rgba(var(--glass),0.96));display:flex;flex-direction:column;justify-content:space-between;padding:18px;transform-style:preserve-3d;transition:transform .2s ease,box-shadow .2s ease}
+    .card-3d .meta{display:flex;justify-content:space-between;align-items:center}
+    .avatar{width:52px;height:52px;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#06b6d4);display:grid;place-items:center;color:white;font-weight:700}
+    .meter{height:8px;background:rgba(var(--muted),0.08);border-radius:6px;overflow:hidden}
+    .meter > i{display:block;height:100%;width:60%;background:linear-gradient(90deg,rgba(var(--accent),1),rgba(59,130,246,0.9))}
+
+    /* ========== GALLERY ========== */
+    .gallery{display:flex;gap:8px}
+    .thumb{flex:1 1 0;height:100px;border-radius:10px;background-size:cover;background-position:center;cursor:pointer;box-shadow:0 8px 20px rgba(2,6,23,0.06)}
+
+    /* ========== FOOTER / MODAL ========== */
+    footer{margin-top:32px;color:rgb(var(--muted));font-size:13px}
+
+    /* Modal */
+    .modal-backdrop{position:fixed;inset:0;display:grid;place-items:center;background:rgba(2,6,23,0.4);opacity:0;pointer-events:none;transition:opacity .18s ease}
+    .modal{width:100%;max-width:580px;background:rgba(var(--card),1);padding:20px;border-radius:12px;box-shadow:var(--shadow);transform:translateY(12px);transition:transform .18s ease}
+    .modal.open{transform:translateY(0)}
+    .modal-backdrop.open{opacity:1;pointer-events:auto}
+
+    /* Forms */
+    .field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+    input,textarea{padding:10px;border-radius:8px;border:1px solid rgba(var(--muted),0.12);background:transparent;color:inherit;font-size:14px}
+    textarea{min-height:110px;resize:vertical}
+
+    /* Responsiveness */
+    @media (max-width:980px){
+      .hero{grid-template-columns:1fr}
+      .grid{grid-template-columns:repeat(2,1fr)}
+    }
+    @media (max-width:620px){
+      body{padding:18px}
+      .grid{grid-template-columns:1fr}
+      nav ul{display:none}
+    }
+
+    /* Small helpers */
+    .muted{color:rgb(var(--muted));font-size:13px}
+    .small{font-size:13px}
+
+  </style>
+</head>
+<body>
+  <div class="container" id="app">
+    <header>
+      <a class="brand" href="#" aria-label="Página Interativa">
+        <div class="logo">UI</div>
+        <div>
+          <strong>Página Interativa</strong>
+          <div class="small muted">HTML • CSS • JS embutidos</div>
+        </div>
+      </a>
+
+      <div style="display:flex;align-items:center;gap:12px">
+        <nav aria-label="Navegação principal">
+          <ul>
+            <li><a href="#features">Recursos</a></li>
+            <li><a href="#demo">Demo</a></li>
+            <li><a href="#contact" id="openContact">Contato</a></li>
+          </ul>
+        </nav>
+
+        <button class="theme-toggle" id="themeToggle" title="Alternar tema">🌙</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="hero-card" role="region" aria-labelledby="hero-title">
+          <h1 id="hero-title">Uma página exemplo, elegante e interativa</h1>
+          <p class="lead">Layout moderno responsivo com componentes práticos: cartão 3D, galeria, modal de contato e alternância de tema. Use como base para seus projetos.</p>
+
+          <div class="cta-row">
+            <button class="btn btn-primary" id="demoBtn">Ver demo</button>
+            <button class="btn btn-ghost" id="downloadBtn">Salvar HTML</button>
+          </div>
+
+          <div style="margin-top:16px">
+            <div class="muted">Acessos</div>
+            <div style="display:flex;gap:10px;margin-top:8px;align-items:center">
+              <div class="meter" style="flex:1"><i></i></div>
+              <div class="small muted">7.2k visitas</div>
+            </div>
+          </div>
+        </div>
+
+        <aside>
+          <div class="interactive" aria-hidden="false">
+            <div class="card-3d" id="card3d" tabindex="0">
+              <div class="meta">
+                <div>
+                  <div class="avatar">JS</div>
+                </div>
+                <div class="muted small">Interação 3D</div>
+              </div>
+
+              <div>
+                <h3 style="margin:0 0 6px">Cartão Interativo</h3>
+                <p class="small muted">Mova o mouse sobre o cartão para ver o efeito 3D. Pressione espaço para animar.</p>
+              </div>
+
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div class="small muted">Progresso</div>
+                <div style="width:120px" class="meter"><i style="width:72%"></i></div>
+              </div>
+            </div>
+
+            <div style="margin-top:12px" class="gallery" aria-hidden="true">
+              <div class="thumb" style="background-image:url('https://images.unsplash.com/photo-1503023345310-bd7c1de61c7d?auto=format&fit=crop&w=800&q=60');" data-large="https://images.unsplash.com/photo-1503023345310-bd7c1de61c7d?auto=format&fit=crop&w=1200&q=80" role="button" aria-label="Abrir imagem 1"></div>
+              <div class="thumb" style="background-image:url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=60');" data-large="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1200&q=80" role="button" aria-label="Abrir imagem 2"></div>
+              <div class="thumb" style="background-image:url('https://images.unsplash.com/photo-1492724441997-5dc865305da7?auto=format&fit=crop&w=800&q=60');" data-large="https://images.unsplash.com/photo-1492724441997-5dc865305da7?auto=format&fit=crop&w=1200&q=80" role="button" aria-label="Abrir imagem 3"></div>
+            </div>
+          </div>
+        </aside>
+      </section>
+
+      <section id="features" class="grid">
+        <div class="feature" tabindex="0">
+          <h3>Design Responsivo</h3>
+          <p>Componentes que se adaptam a telas pequenas ou grandes sem esforço.</p>
+        </div>
+        <div class="feature" tabindex="0">
+          <h3>Acessibilidade</h3>
+          <p>Foco visível, roles e atributos ARIA básicos para navegação com teclado.</p>
+        </div>
+        <div class="feature" tabindex="0">
+          <h3>Performance</h3>
+          <p>Somente recursos essenciais no arquivo — ideal para protótipos leves.</p>
+        </div>
+        <div class="feature" tabindex="0">
+          <h3>Interatividade</h3>
+          <p>Efeitos 3D, lightbox simples e validação de formulário via JavaScript.</p>
+        </div>
+        <div class="feature" tabindex="0">
+          <h3>Temas</h3>
+          <p>Suporte a tema claro e escuro com persistência em localStorage.</p>
+        </div>
+        <div class="feature" tabindex="0">
+          <h3>Pronto para clonar</h3>
+          <p>Copie o arquivo, modifique e publique. Comentários inline ajudam a orientar alterações.</p>
+        </div>
+      </section>
+
+      <section id="demo" class="hero-card" style="margin-bottom:24px">
+        <h2 style="margin-top:0">Demo: Formulário com Validação</h2>
+        <form id="contactForm" novalidate>
+          <div class="field">
+            <label for="name">Nome</label>
+            <input id="name" name="name" required placeholder="Seu nome" />
+          </div>
+          <div class="field">
+            <label for="email">E‑mail</label>
+            <input id="email" name="email" type="email" required placeholder="seu@exemplo.com" />
+          </div>
+          <div class="field">
+            <label for="message">Mensagem</label>
+            <textarea id="message" name="message" placeholder="Como posso ajudar?" required></textarea>
+          </div>
+
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="btn btn-primary" type="submit">Enviar</button>
+            <div id="formStatus" class="muted small">Nenhuma ação ainda.</div>
+          </div>
+        </form>
+      </section>
+
+    </main>
+
+    <footer>
+      <div>Feito com ❤️ — código único em um arquivo. &middot; <strong>Use como ponto de partida.</strong></div>
+    </footer>
+
+  </div>
+
+  <!-- Modal markup (fora do fluxo) -->
+  <div id="modalBackdrop" class="modal-backdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <h3 id="modalTitle">Fale conosco</h3>
+      <p class="muted small">Envie uma mensagem rápida — este modal demonstra manipulação simples de DOM.</p>
+      <form id="modalForm">
+        <div class="field"><label for="mname">Nome</label><input id="mname" required></div>
+        <div class="field"><label for="mmsg">Mensagem</label><textarea id="mmsg" required></textarea></div>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button type="button" class="btn btn-ghost" id="closeModal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Enviar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // ====== Utilitários ======
+    const $ = (sel, ctx = document) => ctx.querySelector(sel);
+    const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
+
+    // ====== Tema (persistência) ======
+    const themeToggle = $('#themeToggle');
+    const root = document.documentElement;
+    const saved = localStorage.getItem('ui-theme');
+    if (saved) document.documentElement.setAttribute('data-theme', saved);
+    const isDark = () => document.documentElement.getAttribute('data-theme') === 'dark';
+    const updateToggle = () => themeToggle.textContent = isDark() ? '☀️' : '🌙';
+    updateToggle();
+    themeToggle.addEventListener('click', () => {
+      const next = isDark() ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('ui-theme', next);
+      updateToggle();
+    });
+
+    // ====== Cartão 3D (efeito parallax) ======
+    const card = $('#card3d');
+    let bounds = null;
+    function updateBounds(){ bounds = card.getBoundingClientRect(); }
+    updateBounds();
+    window.addEventListener('resize', updateBounds);
+
+    function handleMove(e){
+      const {clientX, clientY} = e.type.startsWith('touch') ? e.touches[0] : e;
+      const px = (clientX - (bounds.left + bounds.width/2)) / (bounds.width/2);
+      const py = (clientY - (bounds.top + bounds.height/2)) / (bounds.height/2);
+      const rx = -py * 8; // rotation X
+      const ry = px * 12; // rotation Y
+      card.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg) scale(1.02)`;
+      card.style.boxShadow = '0 20px 40px rgba(2,6,23,0.12)';
+    }
+    function resetCard(){ card.style.transform = 'rotateX(0deg) rotateY(0deg) scale(1)'; card.style.boxShadow = '' }
+
+    card.addEventListener('mousemove', handleMove);
+    card.addEventListener('touchmove', handleMove);
+    card.addEventListener('mouseleave', resetCard);
+    card.addEventListener('touchend', resetCard);
+    card.addEventListener('keydown', (ev) => { if(ev.code === 'Space'){ ev.preventDefault(); card.animate([{transform:'scale(1)'},{transform:'scale(1.03)'},{transform:'scale(1)'}],{duration:420}) } });
+
+    // ====== Lightbox simples para galeria ======
+    const backdrop = document.createElement('div');
+    backdrop.style.position = 'fixed'; backdrop.style.inset = 0; backdrop.style.display='grid'; backdrop.style.placeItems='center'; backdrop.style.background='rgba(2,6,23,0.6)'; backdrop.style.opacity=0; backdrop.style.transition='opacity .18s ease'; backdrop.style.pointerEvents='none';
+    const img = document.createElement('img'); img.style.maxWidth='92%'; img.style.maxHeight='88%'; img.style.borderRadius='10px'; img.style.boxShadow='0 12px 40px rgba(2,6,23,0.6)';
+    backdrop.appendChild(img); document.body.appendChild(backdrop);
+
+    $$('.thumb').forEach(t => t.addEventListener('click', ()=>{
+      img.src = t.dataset.large || t.style.backgroundImage.slice(5,-2);
+      backdrop.style.opacity = 1; backdrop.style.pointerEvents = 'auto';
+    }));
+    backdrop.addEventListener('click', ()=>{ backdrop.style.opacity=0; backdrop.style.pointerEvents='none'; setTimeout(()=>img.src='','200') });
+
+    // ====== Modal (Contato) ======
+    const modalBackdrop = $('#modalBackdrop');
+    const openContact = $('#openContact');
+    const closeModal = $('#closeModal');
+
+    openContact.addEventListener('click', (e)=>{ e.preventDefault(); modalBackdrop.classList.add('open'); modalBackdrop.setAttribute('aria-hidden','false'); $('#mname').focus(); document.body.style.overflow='hidden' });
+    closeModal.addEventListener('click', ()=>{ modalBackdrop.classList.remove('open'); modalBackdrop.setAttribute('aria-hidden','true'); document.body.style.overflow='auto' });
+    modalBackdrop.addEventListener('click', (e)=>{ if(e.target === modalBackdrop){ closeModal.click() } });
+    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeModal.click() });
+
+    $('#modalForm').addEventListener('submit', (ev)=>{
+      ev.preventDefault();
+      // Simulação de envio
+      const name = $('#mname').value.trim();
+      const msg = $('#mmsg').value.trim();
+      if(!name || !msg){ alert('Preencha os campos'); return }
+      alert(`Obrigado, ${name}! Mensagem enviada.`);
+      closeModal.click();
+    });
+
+    // ====== Formulário principal ======
+    const contactForm = $('#contactForm');
+    contactForm.addEventListener('submit', (ev)=>{
+      ev.preventDefault();
+      const name = $('#name').value.trim();
+      const email = $('#email').value.trim();
+      const message = $('#message').value.trim();
+      const status = $('#formStatus');
+      if(!name || !email || !message){ status.textContent='Preencha todos os campos.'; status.style.color='var(--muted)'; return }
+      // validação simples de email
+      const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if(!re.test(email)){ status.textContent='E-mail inválido.'; return }
+      status.textContent='Enviando...';
+      setTimeout(()=>{ status.textContent='Mensagem enviada com sucesso!'; }, 700);
+    });
+
+    // ====== Download do HTML (gera o conteúdo atual da página como arquivo) ======
+    $('#downloadBtn').addEventListener('click', ()=>{
+      const html = new XMLSerializer().serializeToString(document.doctype) + '\n' + document.documentElement.outerHTML;
+      const blob = new Blob([html], {type:'text/html'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = 'pagina_interativa.html'; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 1000);
+    });
+
+    // ====== Demo button: scroll to demo ======
+    $('#demoBtn').addEventListener('click', ()=>{ document.getElementById('demo').scrollIntoView({behavior:'smooth'}) });
+
+    // Small accessibility: focus styles
+    document.addEventListener('keyup', (e)=>{ if(e.key === 'Tab') document.body.classList.add('show-focus') });
+
+  </script>
+</body>
+</html>
