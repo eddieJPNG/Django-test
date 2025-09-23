@@ -19,3 +19,11 @@ def dados(name='nome', age=18, height=1.80):
 
 dados('Eddie', 20, 1.75)
 
+def soma(a,b):
+    c = a + b
+    return c
+    
+
+# soma = soma(2,3)
+# print(soma)
+
