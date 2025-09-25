@@ -57,6 +57,7 @@ def avg2(*values):
 print(avg2(12,45,67))
 
 #isinstance
+
 #FERRAMENTA MUITO PODEROSA!
 
 
@@ -76,4 +77,27 @@ print(avg2(12,45,67))
 # Logolas bonecos 10 - 1
 
 print(1+3+1+1+1+1+1)
+
+#key words arguments 
+
+
+def func(a, b, c):
+    print(a, b, c)
+
+func(2,4,66)
+
+func(b=55, c=99, a=61)
+
+def dic(a,b,**f):
+    print(a,b)
+    print(f)
+
+#PARAMETROS COMO "**F" NÃO SAO OBRIGATORIOS
+
+def dic2(**ficha):
+    return ficha.copy
+
+ficha = dic2(nome="Baki", altura="1.60", estilo="misto")
+
+
 
