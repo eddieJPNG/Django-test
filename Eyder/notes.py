@@ -78,6 +78,11 @@ print(avg2(12,45,67))
 
 print(1+3+1+1+1+1+1)
 
+print("===============================================================")
+print("===============================================================")
+print("===============================================================")
+
+
 #key words arguments 
 
 
@@ -100,4 +105,88 @@ def dic2(**ficha):
 ficha = dic2(nome="Baki", altura="1.60", estilo="misto")
 
 
+print(
+    bin(-28330)
+)
 
+print("===============================================================")
+print("===============================================================")
+print("===============================================================")
+
+
+eddie = {1,2}
+
+print(eddie)
+
+#AQUELE QUESITO DAS VARIAVEIS ARMAZENADAS NA MEMORIA SE APLICAM SEMELHANTEMENTE A FUNÇÕES.
+
+print("===============================================================")
+print("===============================================================")
+print("===============================================================")
+
+
+def calc(a,b,operation):
+    return operation(a,b)
+
+def add(a,b):
+    return a + b
+
+def mul(a,b):
+    return a * b
+
+def sub(a,b):
+    return a - b
+
+def div(a,b):
+    return a / b
+
+print(add(1,2))
+print(mul(1,2))
+print(sub(1,2))
+print(div(1,2))
+print(calc(1,2, add))
+print(calc(1,2, mul))
+print(calc(1,2, sub))
+print(calc(1,2, div))
+
+print("===============================================================")
+print("===============================================================")
+print("===============================================================")
+
+
+import random
+
+print(random.randint(1, 20))
+print(random.randint(1, 20))
+print(random.randint(1, 20))
+print(random.randint(1, 20))
+print(random.randint(1, 20))
+print(random.randint(1, 20))
+print(random.randint(1, 20))
+
+
+print("===============================================================")
+print("===============================================================")
+print("===============================================================")
+
+#FACA UMA FUNC DE RANDOM_NUMBER(), DEPOIS FACA UMA C/10 NUMEROS COM UMA 
+#QUANTIDADE ALEATÓRIA DE DIGITOS (1 A 5), E ORDENE PELA QUNAITDADE DE DIGITOS.
+
+
+
+def random_number(n):
+    listb = []
+
+
+    for i in range(n+1):
+        listb.append(i)
+
+    print(listb)
+
+print(random_number(7))
+
+print(564 % 2)
+
+print("===============================================================")
+print("===============================================================")
+print("===============================================================")
